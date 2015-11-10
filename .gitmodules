@@ -1,0 +1,12 @@
+[submodule "lib/web"]
+	path = lib/web
+	url = https://github.com/dmp1ce/decompose-web-common.git
+[submodule "lib/common"]
+	path = lib/common
+	url = https://github.com/dmp1ce/decompose-common.git
+[submodule "lib/backup"]
+	path = lib/backup
+	url = https://github.com/dmp1ce/decompose-backup-common.git
+[submodule "lib/docker"]
+	path = lib/docker
+	url = https://github.com/dmp1ce/decompose-docker-common.git

@@ -1,0 +1,167 @@
+# Include common processes
+source $(_decompose-project-root)/.decompose/environment/lib/web/processes
+source $(_decompose-project-root)/.decompose/environment/lib/common/processes
+source $(_decompose-project-root)/.decompose/environment/lib/backup/processes
+source $(_decompose-project-root)/.decompose/environment/lib/docker/processes
+
+# Declare processes
+DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'initialize_redmine'
+  'remove_generated_files'
+  "${DECOMPOSE_WEB_PROCESSES[@]}" "${DECOMPOSE_COMMON_PROCESSES[@]}"
+  "${DECOMPOSE_BACKUP_PROCESSES[@]}" "${DECOMPOSE_DOCKER_PROCESSES[@]}" )
+
+# The purpose of this process is to start Redmine for the first time which
+# requires several configurations.  This script handles the following:
+# - Prompting for a database password
+# - Creating and configuring the database.yml file
+# - Building and running docker containers
+# - Creating Redmine user with proper permissions
+# - Creating Redmine database and add default data
+#
+# For documentation on configuring Redmine:
+# http://www.redmine.org/projects/redmine/wiki/redmineinstall
+_decompose-process-initialize_redmine() {
+  local project_root="$(_decompose-project-root)"
+  local scripts_dir="$project_root/scripts"
+  local redmine_dir="$project_root/redmine"
+
+  echo "Starting Initilize Redmine environment script"
+
+  if [ ! -f "$redmine_dir/config/database.yml" ]; then
+    echo "Creating database.yml"
+    cp -n "$scripts_dir/database.yml" "$redmine_dir/config"
+  fi
+
+  echo "Building and then running containers."
+  decompose build
+  decompose up
+
+  # Get mariadb container information
+  mariadb_container_id=$(docker-compose ps -q mariadb)
+
+  echo "Allow MySQL to start up (wait 10 seconds)"
+  for i in {1..10}; do printf "$((11-i)) "; sleep 1; done; echo ""
+
+  echo "Creating Redmine user"
+  docker exec $mariadb_container_id mysql -u root -p$PROJECT_DB_ROOT_PASSWORD -e 'CREATE USER '"'"$PROJECT_DB_USER"'"'@'"'"'172.%'"'"' IDENTIFIED BY '"'"$PROJECT_DB_PASSWORD"'"''
+  docker exec $mariadb_container_id mysql -u root -p$PROJECT_DB_ROOT_PASSWORD -e 'GRANT ALL PRIVILEGES ON redmine_production.* TO '"'"$PROJECT_DB_USER"'"'@'"'"'172.%'"'"''
+  
+  # Get passenger container information
+  passenger_container_id=$(docker-compose ps -q passenger)
+
+  echo "Building Gemfile.lock"
+  docker exec $passenger_container_id bash -c 'cd /home/app/redmine; bundle install --without development test'
+  echo "Creating Redmine database"
+  docker exec $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake db:create)'
+  echo "Migrating database"
+  docker exec $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake db:migrate)'
+  echo "Generating secret token"
+  docker exec $passenger_container_id bash -c 'cd /home/app/redmine; rake generate_secret_token'
+  echo "Loading default data"
+  docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake redmine:load_default_data)'
+  
+  # Create cache directory
+  mkdir "$redmine_dir/tmp/cache"
+  chmod 777 "$redmine_dir/tmp/cache"
+  
+  # Restart passenger
+  decompose up
+}
+_decompose-process-initialize_redmine_help() {
+  echo "  Start Redmine for the first time and initialize it"
+}
+
+_decompose-process-remove_generated_files() {
+  local redmine_dir="$(_decompose-project-root)/redmine"
+
+  # Delete files generated from initilization process
+  rm "$redmine_dir/Gemfile.lock"
+  rm "$redmine_dir/config/initializers/secret_token.rb"
+  rm "$redmine_dir/config/database.yml"
+  mv "$redmine_dir/tmp/cache" /tmp/cache-$(uuidgen)
+}
+_decompose-process-remove_generated_files_help() {
+  echo "  Delete files generated from initilization process"
+}
+
+_decompose-process-explore_db() {
+  # Get the name of the database container
+  local cid=$(docker-compose ps -q mariadb)
+
+  # Enter mysql
+  local password_param=""
+  if [ "$PROJECT_DB_PASSWORD" ]; then
+    local password_param="-p$PROJECT_DB_PASSWORD"
+  fi
+  docker exec -it $cid bash -c "mysql -u $PROJECT_DB_USER $password_param -D $PROJECT_DB_DATABASE"
+}
+_decompose-process-explore_db_help() {
+  echo "  Explore database"
+}
+
+_decompose-process-build() {
+  echo "Building decompose templates..."
+  decompose-process-templates 
+
+  echo "Creating version file..."
+  local project_root=$(_decompose-project-root)
+  local git_base_revision="`git -C $project_root describe --tags --match=v* --always --dirty 2>&1`"
+  # Set current base version
+  echo -e "$PROJECT_ENVIRONMENT\n$git_base_revision\n\n$(date)" > \
+    "$project_root"/"$PROJECT_VERSION_FILE"
+
+  # Pull the latest images
+  # Waiting for docker-compose fix:
+  # https://github.com/docker/compose/pull/1494
+  echo "Updating docker images..."
+  docker pull busybox
+  docker pull mariadb
+  docker pull debian:jessie
+  docker pull nginx
+  docker pull jwilder/nginx-proxy
+
+  # Generate nginx-proxy configurations
+  _decompose-process-generate_nginx_proxy_configs
+
+  # Remove 'source' container if this is production
+  echo "Rebuilding/recreating all containers..."
+  if [[ $PRODUCTION ]]; then
+    docker-compose rm -f source
+  fi
+
+  docker-compose build
+}
+_decompose-process-build_help() {
+  echo "  Build the project"
+}
+
+_decompose-process-up() {
+  if [[ $PRODUCTION ]]; then
+    docker-compose up -d --force-recreate
+  else
+    docker-compose up -d
+  fi
+
+  # If nginx-proxy is not running start it first to copy configuration files to it
+  local nginx_proxy_id=$(_decompose-process_nginx_proxy_id)
+  if [ -z "$nginx_proxy_id" ]; then
+    local nginx_proxy_id=$(_decompose-process-start_nginx_proxy)
+  fi
+
+  # Copy configuration files to nginx-proxy
+  local nginx_proxy_dir="$(_decompose-project-root)/containers/nginx_proxy"
+  test -d "$nginx_proxy_dir/vhost.d" &&
+  docker cp "$nginx_proxy_dir"/vhost.d/. $nginx_proxy_id:/etc/nginx/vhost.d
+  test -d "$nginx_proxy_dir/certs" &&
+  docker cp $nginx_proxy_dir/certs/. $nginx_proxy_id:/etc/nginx/certs
+  test -f "$nginx_proxy_dir/proxy.conf" &&
+  docker cp $nginx_proxy_dir/proxy.conf $nginx_proxy_id:/etc/nginx/proxy.conf
+
+  # Restart nginx-proxy
+  _decompose-process-restart_nginx_proxy
+}
+_decompose-process-up_help() {
+  echo "  Start project locally"
+}
+
+# vim:syntax=sh

@@ -1,0 +1,21 @@
+# Include common elements
+source $(_decompose-project-root)/.decompose/environment/lib/web/elements
+source $(_decompose-project-root)/.decompose/environment/lib/backup/elements
+
+ELEMENTS_POST_PROCESS=( "${ELEMENTS_WEB_POST_PROCESS[@]}" )
+
+# Where to write current version information to
+PROJECT_VERSION_FILE="containers/passenger/redmine/public/version.txt"
+
+# Default Database settings
+PROJECT_DB_DATABASE="app"
+PROJECT_DB_USER="app_user"
+PROJECT_DB_PASSWORD="password"
+PROJECT_DB_ROOT_PASSWORD="dont_use_root_user"
+
+# Debugging for nginx
+#PROJECT_DEBUG_NGINX="on"
+# Basic HTTP security
+#PROJECT_HTTP_SECURITY="on"
+
+# vim:syntax=sh
