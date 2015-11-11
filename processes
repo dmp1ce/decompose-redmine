@@ -25,12 +25,10 @@ _decompose-process-initialize_redmine() {
   local scripts_dir="$project_root/scripts"
   local redmine_dir="$project_root/redmine"
 
-  echo "Starting Initilize Redmine environment script"
+  echo "Starting Initilize Redmine environment script..."
 
-  if [ ! -f "$redmine_dir/config/database.yml" ]; then
-    echo "Creating database.yml"
-    cp -n "$scripts_dir/database.yml" "$redmine_dir/config"
-  fi
+  echo "Creating database.yml"
+  cp "$scripts_dir/database.yml" "$redmine_dir/config"
 
   echo "Building and then running containers."
   decompose build
@@ -61,7 +59,7 @@ _decompose-process-initialize_redmine() {
   docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake redmine:load_default_data)'
   
   # Create cache directory
-  mkdir "$redmine_dir/tmp/cache"
+  mkdir -p "$redmine_dir/tmp/cache"
   chmod 777 "$redmine_dir/tmp/cache"
   
   # Restart passenger
