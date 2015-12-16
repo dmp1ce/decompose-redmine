@@ -98,65 +98,18 @@ _decompose-process-explore_db_help() {
 }
 
 _decompose-process-build() {
-  echo "Building decompose templates..."
-  decompose-process-templates 
-
-  echo "Creating version file..."
-  local project_root=$(_decompose-project-root)
-  local git_base_revision="`git -C $project_root describe --tags --match=v* --always --dirty 2>&1`"
-  # Set current base version
-  echo -e "$PROJECT_ENVIRONMENT\n$git_base_revision\n\n$(date)" > \
-    "$project_root"/"$PROJECT_VERSION_FILE"
-
-  # Pull the latest images
-  # Waiting for docker-compose fix:
-  # https://github.com/docker/compose/pull/1494
-  echo "Updating docker images..."
-  docker pull busybox
-  docker pull mariadb
-  docker pull debian:jessie
-  docker pull nginx
-  docker pull jwilder/nginx-proxy
-
-  # Generate nginx-proxy configurations
-  _decompose-process-generate_nginx_proxy_configs
-
-  # Remove 'source' container if this is production
-  echo "Rebuilding/recreating all containers..."
-  if [[ $PRODUCTION ]]; then
-    docker-compose rm -f source
-  fi
-
-  docker-compose build
+  _decompose-process-common-build
+  _decompose-process-build_version_file
+  _decompose-process_nginx_proxy_build
+  _decompose-process-docker-build
 }
 _decompose-process-build_help() {
   echo "  Build the project"
 }
 
 _decompose-process-up() {
-  if [[ $PRODUCTION ]]; then
-    docker-compose up -d --force-recreate
-  else
-    docker-compose up -d
-  fi
-
-  # If nginx-proxy is not running start it first to copy configuration files to it
-  local nginx_proxy_id=$(_decompose-process_nginx_proxy_id)
-  if [ -z "$nginx_proxy_id" ]; then
-    local nginx_proxy_id=$(_decompose-process-start_nginx_proxy)
-  fi
-
-  # Copy configuration files to nginx-proxy
-  local nginx_proxy_dir="$(_decompose-project-root)/containers/nginx_proxy"
-  test -d "$nginx_proxy_dir/vhost.d" &&
-  docker cp "$nginx_proxy_dir"/vhost.d/. $nginx_proxy_id:/etc/nginx/vhost.d
-  test -d "$nginx_proxy_dir/certs" &&
-  docker cp $nginx_proxy_dir/certs/. $nginx_proxy_id:/etc/nginx/certs
-  test -f "$nginx_proxy_dir/proxy.conf" &&
-  docker cp $nginx_proxy_dir/proxy.conf $nginx_proxy_id:/etc/nginx/proxy.conf
-
-  # Restart nginx-proxy
-  _decompose-process-restart_nginx_proxy
+  _decompose-process-docker-up
+  _decompose-process_nginx_proxy_up
 }
 _decompose-process-up_help() {
   echo "  Start project locally"
