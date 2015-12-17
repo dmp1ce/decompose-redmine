@@ -1,0 +1,14 @@
+# Include constant elements
+#source $(_decompose-project-root)/elements
+
+PROJECT_ENVIRONMENT="development"
+PROJECT_NGINX_VIRTUAL_HOST="redmine.local"
+PROJECT_NGINX_VIRTUAL_HOST_ALTS=""
+
+# Database settings
+PROJECT_DB_DATABASE="redmine"
+PROJECT_DB_USER="redmine_user"
+PROJECT_DB_PASSWORD="database_password"
+PROJECT_DB_ROOT_PASSWORD="root_database_password"
+
+# vim:syntax=sh
