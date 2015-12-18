@@ -22,13 +22,9 @@ DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'initialize_redmine'
 # http://www.redmine.org/projects/redmine/wiki/redmineinstall
 _decompose-process-initialize_redmine() {
   local project_root="$(_decompose-project-root)"
-  local scripts_dir="$project_root/scripts"
   local redmine_dir="$project_root/redmine"
 
   echo "Starting Initilize Redmine environment script..."
-
-  echo "Creating database.yml"
-  cp "$scripts_dir/database.yml" "$redmine_dir/config"
 
   echo "Building and then running containers."
   decompose build
