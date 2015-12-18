@@ -23,6 +23,7 @@ RUN apt-get -y install libmysqlclient-dev
 
 # COPY redmine project
 COPY redmine /home/app/redmine
+COPY database.yml /home/app/redmine/config
 
 # COPY plugins
 COPY redmine_plugins/. /home/app/redmine/plugins
