@@ -81,6 +81,7 @@ You can create your own elmeents by adding them to the `.decompose/elements` fil
 - `PROJECT_BACKUP_GPG_PW` : GPG password needed to use the key
 - `PROJECT_BACKUP_TARGET` : Target location to send backup according to Duply documenation
 - `PROJECT_BACKUP_CONFIG_TARGET` : Target location to send configuration backup. Unlike `PROJECT_BACKUP_TARGET` this uses scp scheme and not the Duply scheme.
+- `PROJECT_BACKUP_SOURCE` : The location of the source to backup. Default is `/srv/http/source`.
 
 #### Production Elements
 - `PROJECT_PRODUCTION_SERVER_IP` : IP of production server
