@@ -6,7 +6,7 @@ source $(_decompose-project-root)/.decompose/environment/lib/docker/processes
 
 # Declare processes
 DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'initialize_redmine'
-  'remove_generated_files'
+  'remove_generated_files' 'update_db' 'bundle_install'
   "${DECOMPOSE_WEB_PROCESSES[@]}" "${DECOMPOSE_COMMON_PROCESSES[@]}"
   "${DECOMPOSE_BACKUP_PROCESSES[@]}" "${DECOMPOSE_DOCKER_PROCESSES[@]}" )
 
@@ -114,6 +114,26 @@ _decompose-process-up() {
 }
 _decompose-process-up_help() {
   echo "  Start project locally"
+}
+
+_decompose-process-update_db() {
+  local cid=$(docker-compose ps -q passenger)
+  docker exec -it $cid bash -c "cd /home/app/redmine && \
+    bundle exec rake db:migrate RAILS_ENV=$PROJECT_ENVIRONMENT && \
+    bundle exec rake redmine:plugins:migrate RAILS_ENV=$PROJECT_ENVIRONMENT"
+}
+_decompose-process-update_db_help() {
+  echo "  Run database update as define here:"
+  echo "  http://www.redmine.org/projects/redmine/wiki/RedmineUpgrade"
+}
+
+_decompose-process-bundle_install() {
+  local cid=$(docker-compose ps -q passenger)
+  docker exec -it $cid bash -c "cd /home/app/redmine && \
+    bundle install --without development test"
+}
+_decompose-process-bundle_install_help() {
+  echo "  Run bundle install. Useful for regenerating Gemfile.lock in development."
 }
 
 # vim:syntax=sh
