@@ -39,7 +39,8 @@ _decompose-process-initialize_redmine() {
   echo "Creating Redmine user"
   docker exec $mariadb_container_id mysql -u root -p$PROJECT_DB_ROOT_PASSWORD -e 'CREATE USER '"'"$PROJECT_DB_USER"'"'@'"'"'172.%'"'"' IDENTIFIED BY '"'"$PROJECT_DB_PASSWORD"'"''
   docker exec $mariadb_container_id mysql -u root -p$PROJECT_DB_ROOT_PASSWORD -e 'GRANT ALL PRIVILEGES ON redmine_production.* TO '"'"$PROJECT_DB_USER"'"'@'"'"'172.%'"'"''
-  
+  docker exec $mariadb_container_id mysql -u root -p$PROJECT_DB_ROOT_PASSWORD -e 'GRANT ALL PRIVILEGES ON redmine_test.* TO '"'"$PROJECT_DB_USER"'"'@'"'"'172.%'"'"''
+ 
   # Get passenger container information
   passenger_container_id=$(docker-compose ps -q passenger)
 
