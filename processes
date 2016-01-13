@@ -5,7 +5,7 @@ source $(_decompose-project-root)/.decompose/environment/lib/backup/processes
 source $(_decompose-project-root)/.decompose/environment/lib/docker/processes
 
 # Declare processes
-DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'initialize_redmine'
+DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'explore_passenger' 'initialize_redmine'
   'remove_generated_files' 'update_db' 'bundle_install'
   "${DECOMPOSE_WEB_PROCESSES[@]}" "${DECOMPOSE_COMMON_PROCESSES[@]}"
   "${DECOMPOSE_BACKUP_PROCESSES[@]}" "${DECOMPOSE_DOCKER_PROCESSES[@]}" )
@@ -97,6 +97,14 @@ _decompose-process-explore_db() {
 }
 _decompose-process-explore_db_help() {
   echo "  Explore database"
+}
+
+_decompose-process-explore_passenger() {
+  local cid=$(docker-compose ps -q passenger)
+  docker exec -it $cid bash
+}
+_decompose-process-explore_passenger_help() {
+  echo "  Explore passenger"
 }
 
 _decompose-process-build() {
