@@ -5,6 +5,10 @@ PROJECT_ENVIRONMENT="development"
 PROJECT_NGINX_VIRTUAL_HOST="redmine.local"
 PROJECT_NGINX_VIRTUAL_HOST_ALTS=""
 
+# Rails secrets.yml
+# RAILS_ENV=production rake secret
+#PROJECT_PASSENGER_SECRET_KEY_BASE=''
+
 # Database settings
 PROJECT_DB_DATABASE="redmine"
 PROJECT_DB_USER="redmine_user"
