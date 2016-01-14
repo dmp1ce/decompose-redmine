@@ -48,14 +48,14 @@ _decompose-process-initialize_redmine() {
   # it might not be in the source
   echo "Copy 'database.yml' into passenger container"
   docker cp containers/passenger/database.yml $passenger_container_id:/home/app/redmine/config
+  echo "Copy 'secrets.yml' into passenger container"
+  docker cp containers/passenger/secrets.yml $passenger_container_id:/home/app/redmine/config
   echo "Building Gemfile.lock"
   docker exec $passenger_container_id bash -c 'cd /home/app/redmine; bundle install --without development test'
   echo "Creating Redmine database"
   docker exec $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake db:create)'
   echo "Migrating database"
   docker exec $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake db:migrate)'
-  echo "Generating secret token"
-  docker exec $passenger_container_id bash -c 'cd /home/app/redmine; rake generate_secret_token'
   echo "Loading default data"
   docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake redmine:load_default_data)'
   
