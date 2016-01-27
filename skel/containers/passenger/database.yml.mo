@@ -14,14 +14,19 @@ production: &default
 
 development:
   <<: *default
-  database: redmine_development
+  #database: redmine_development
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
-  <<: *default
-  database: redmine_test
+  adapter: mysql2
+  database: "{{PROJECT_DB_TEST_DATABASE}}"
+  host: <%= ENV.fetch('MARIADB_1_PORT_3306_TCP_ADDR', 'localhost') %>
+  port: <%= ENV.fetch('MARIADB_1_PORT_3306_TCP_PORT', '3306') %>
+  username: "{{PROJECT_DB_USER}}"
+  password: "{{PROJECT_DB_PASSWORD}}"
+  encoding: utf8
 
 # PostgreSQL configuration example
 #production:
