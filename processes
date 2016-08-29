@@ -6,7 +6,7 @@ source $(_decompose-project-root)/.decompose/environment/lib/docker/processes
 
 # Declare processes
 DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'explore_passenger' 'initialize_redmine'
-  'remove_generated_files' 'update_db' 'bundle_install'
+  'remove_generated_files' 'update_db' 'bundle_install' 'cron'
   "${DECOMPOSE_WEB_PROCESSES[@]}" "${DECOMPOSE_COMMON_PROCESSES[@]}"
   "${DECOMPOSE_BACKUP_PROCESSES[@]}" "${DECOMPOSE_DOCKER_PROCESSES[@]}" )
 
@@ -145,4 +145,47 @@ _decompose-process-bundle_install_help() {
   echo "  Run bundle install. Useful for regenerating Gemfile.lock in development."
 }
 
-# vim:syntax=sh
+_decompose-process-cron() {
+  echo "Rebuilding the project ..."
+  decompose build
+  return_code=$((return_code + $?))
+  if [ $return_code -ne 0 ]; then
+    echo "Return code of '$return_code' detected. Stopping Cron process."
+    return $return_code
+  fi
+  echo "Restarting services ..."
+  decompose up
+  return_code=$((return_code + $?))
+  if [ $return_code -ne 0 ]; then
+    echo "Return code of '$return_code' detected. Stopping Cron process."
+    return $return_code
+  fi
+  echo "Running bundle install ..."
+  decompose bundle_install
+  return_code=$((return_code + $?))
+  if [ $return_code -ne 0 ]; then
+    echo "Return code of '$return_code' detected. Stopping Cron process."
+    return $return_code
+  fi
+  echo "Running update database scripts ..."
+  decompose update_db
+  return_code=$((return_code + $?))
+  if [ $return_code -ne 0 ]; then
+    echo "Return code of '$return_code' detected. Stopping Cron process."
+    return $return_code
+  fi
+
+  echo "Removing dangling Docker images ..."
+  decompose remove-dangling-docker-images
+  return_code=$((return_code + $?))
+  echo "Backing up config ..."
+  decompose backup_config
+  return_code=$((return_code + $?))
+
+  return $return_code
+}
+_decompose-process-cron_help() {
+  echo "  Run cron tasks"
+}
+
+# vim:syntax=sh tabstop=2 shiftwidth=2 expandtab
