@@ -161,10 +161,6 @@ _decompose-process-cron() {
     return $return_code
   fi
 
-  echo "Running bundle install ..."
-  decompose bundle_install
-  return_code=$((return_code + $?))
-
   echo "Running update database scripts ..."
   decompose update_db
   return_code=$((return_code + $?))
