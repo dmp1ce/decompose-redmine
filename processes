@@ -6,7 +6,7 @@ source $(_decompose-project-root)/.decompose/environment/lib/docker/processes
 
 # Declare processes
 DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'explore_passenger' 'initialize_redmine'
-  'remove_generated_files' 'update_db' 'bundle_install' 'cron'
+  'remove_generated_files' 'update_db' 'bundle_install' 'cron' 'backup-site-data'
   "${DECOMPOSE_WEB_PROCESSES[@]}" "${DECOMPOSE_COMMON_PROCESSES[@]}"
   "${DECOMPOSE_BACKUP_PROCESSES[@]}" "${DECOMPOSE_DOCKER_PROCESSES[@]}" )
 
@@ -143,6 +143,17 @@ _decompose-process-bundle_install() {
 }
 _decompose-process-bundle_install_help() {
   echo "  Run bundle install. Useful for regenerating Gemfile.lock in development."
+}
+
+_decompose-process-backup-site-data() {
+  # Get the name of the database container
+  local cid=$(docker-compose ps -q backup)
+
+  # Run backup
+  docker exec $cid duply site_data backup
+}
+_decompose-process-backup-db_help() {
+  echo "  Manually start backup process"
 }
 
 _decompose-process-cron() {
