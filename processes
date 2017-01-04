@@ -6,7 +6,7 @@ source $(_decompose-project-root)/.decompose/environment/lib/docker/processes
 
 # Declare processes
 DECOMPOSE_PROCESSES=( 'build' 'up' 'explore_db' 'explore_passenger' 'initialize_redmine'
-  'remove_generated_files' 'update_db' 'bundle_install' 'cron' 'backup-site-data'
+  'remove_generated_files' 'update_db' 'bundle_install' 'cron' 'backup-site-data' 'export_db' 'import_db'
   "${DECOMPOSE_WEB_PROCESSES[@]}" "${DECOMPOSE_COMMON_PROCESSES[@]}"
   "${DECOMPOSE_BACKUP_PROCESSES[@]}" "${DECOMPOSE_DOCKER_PROCESSES[@]}" )
 
@@ -188,6 +188,57 @@ _decompose-process-cron() {
 }
 _decompose-process-cron_help() {
   echo "  Run cron tasks"
+}
+
+_decompose-process-export_db() {
+  # Verify the the first parameter is a file
+  local filename="$1"
+  if [ -z "$filename" ]; then
+    echo "Please specify name of export"
+    exit 1
+  fi
+
+  # Get the name of the database container
+  local cid=$(docker-compose ps -q mariadb)
+
+  # Export file
+  #docker exec $cid bash -c "drush sql-dump --gzip > /tmp/${filename##*/}.sql.gz"
+  docker exec $cid bash -c "mysqldump -u$PROJECT_DB_USER -p$PROJECT_DB_PASSWORD $PROJECT_DB_DATABASE | gzip > /tmp/${filename##*/}.sql.gz"
+
+  # Copy file to container /tmp
+  docker cp $cid:/tmp/${filename##*/}.sql.gz $filename.sql.gz
+
+  # Delete /tmp file
+  docker exec $cid rm /tmp/${filename##*/}.sql.gz
+}
+_decompose-process-export_db_help() {
+  echo "  Export DB to the specified filename"
+  echo "  Export will append '.sql.gz' to the argument provided."
+}
+
+_decompose-process-import_db() {
+  # Verify the the first parameter is a file
+  local sql_file=$1
+  if [ ! -e "$sql_file" ]; then
+    echo "File '$sql_file' does not exist"
+    exit 1
+  fi
+
+  # Get the name of the database container
+  local cid=$(docker-compose ps -q mariadb)
+
+  # Copy file to container /tmp
+  docker cp $sql_file $cid:/tmp
+
+  # Import file
+  docker exec $cid bash -c "gzip -d < /tmp/${sql_file##*/} | mysql -u$PROJECT_DB_USER -p$PROJECT_DB_PASSWORD $PROJECT_DB_DATABASE"
+
+  # Delete /tmp file
+  docker exec $cid rm /tmp/${sql_file##*/}
+}
+_decompose-process-import_db_help() {
+  echo "  Import DB passed in as a parameter 1"
+  echo "  Warning: This will drop current database."
 }
 
 # vim:syntax=sh tabstop=2 shiftwidth=2 expandtab
