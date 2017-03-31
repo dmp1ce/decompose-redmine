@@ -11,11 +11,6 @@ Redmine environment for Decompose intended to help developers quickly start a Re
 ``` bash
 decompose --init https://github.com/dmp1ce/decompose-redmine.git
 
-# Copy Redmine code into `containers/passenger/redmine`
-rm containers/passenger/redmine/* && \
-rmdir containers/passenger/redmine && \
-git submodule add -b 2.3-stable https://github.com/redmine/redmine.git containers/passenger/redmine
-
 # Initialize Redmine for the the first start
 decompose initialize_redmine
 ```
