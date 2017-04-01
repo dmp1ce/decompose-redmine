@@ -57,7 +57,9 @@ _decompose-process-initialize_redmine() {
   echo "Migrating database"
   docker exec $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake db:migrate)'
   echo "Loading default data"
-  docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine; (export RAILS_ENV=production && rake redmine:load_default_data)'
+  docker exec -it $passenger_container_id bash -c "cd /home/app/redmine; (export RAILS_ENV=production && \
+    export REDMINE_LANG=$PROJECT_REDMINE_LANG && \
+    rake redmine:load_default_data)"
   
   # Create file directories
   docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine && \

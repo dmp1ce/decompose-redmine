@@ -14,6 +14,10 @@ PROJECT_DB_USER="app_user"
 PROJECT_DB_PASSWORD="password"
 PROJECT_DB_ROOT_PASSWORD="dont_use_root_user"
 
+# Set language for Redmine
+# Used during `redmine:load_default_data`
+PROJECT_REDMINE_LANG="en"
+
 # Debugging for nginx
 #PROJECT_DEBUG_NGINX="on"
 # Basic HTTP security
