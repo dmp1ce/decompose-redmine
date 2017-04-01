@@ -11,6 +11,9 @@ Redmine environment for Decompose intended to help developers quickly start a Re
 ``` bash
 decompose --init https://github.com/dmp1ce/decompose-redmine.git
 
+# Set the version of Redmine to use (lastest of master branch is default)
+git -C containers/passenger/redmine checkout 3.3-stable
+
 # Initialize Redmine for the the first start
 decompose initialize_redmine
 ```

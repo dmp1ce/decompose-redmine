@@ -63,6 +63,14 @@ _decompose-process-initialize_redmine() {
   docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine && \
     mkdir -p tmp/cache tmp/pdf tmp/test tmp/thumbnails && \
     chmod 777 -R files log tmp public/plugin_assets'
+
+  # Generate secret if needed
+  if [ ! -f "$project_root/.decompose/secret.txt" ]; then
+    docker exec -it $passenger_container_id bash -c 'cd /home/app/redmine && \
+      RAILS_ENV=production rake secret > /tmp/secret.txt'
+    docker cp $passenger_container_id:/tmp/secret.txt "$project_root/.decompose/secret.txt"
+    decompose build
+  fi
   
   # Restart passenger
   decompose up

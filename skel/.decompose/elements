@@ -5,9 +5,14 @@ PROJECT_ENVIRONMENT="development"
 PROJECT_NGINX_VIRTUAL_HOST="redmine.local"
 PROJECT_NGINX_VIRTUAL_HOST_ALTS=""
 
-# Rails secrets.yml
-# RAILS_ENV=production rake secret
-#PROJECT_PASSENGER_SECRET_KEY_BASE=''
+# Generate rails secrets.yml
+#
+# Use `RAILS_ENV=production rake secret` to generate a secret manually
+# and put the secret in `.decompose/secret.txt`
+local secret_file=$(_decompose-project-root)/.decompose/secret.txt
+if [ -f $secret_file ]; then
+  PROJECT_PASSENGER_SECRET_KEY_BASE=$(cat $secret_file)
+fi
 
 # Database settings
 PROJECT_DB_DATABASE="redmine"
