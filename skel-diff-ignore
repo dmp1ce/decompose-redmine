@@ -1,3 +1,17 @@
 .gitmodules
 .git
+docker-compose.yml
 .decompose/environment
+.decompose/secret.txt
+containers/backup/backup_service
+containers/backup/Dockerfile
+containers/backup/.duply/site_data/conf
+containers/backup/.duply/site_data/exclude
+containers/backup/.duply/site_database/conf
+containers/backup/.duply/site_database/pre
+containers/nginx_proxy/docker-compose-web.yml
+containers/nginx_proxy/vhost.d/*.local
+containers/passenger/database.yml
+containers/passenger/redmine
+containers/passenger/redmine.conf
+containers/passenger/version.txt
