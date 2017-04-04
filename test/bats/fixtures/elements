@@ -1,0 +1,9 @@
+# journald not available in container.
+PROJECT_DOCKER_LOG_DRIVER=none
+
+# Project namespace
+# Used for naming Docker volumes specific to this project.
+# Be careful changing this because it can change stored data location
+PROJECT_NAMESPACE="redmine_test"
+
+# vim:syntax=sh
