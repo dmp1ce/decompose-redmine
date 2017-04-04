@@ -19,4 +19,13 @@ PROJECT_BACKUP_EXCLUDES=( '.gitmodules'
   "$PROJECT_BACKUP_CONFIG_BACKUP_DIRECTORY" )
 PROJECT_BACKUP_SOURCE="/home/app/redmine"
 
+# Generate rails secrets.yml
+#
+# Use `RAILS_ENV=production rake secret` to generate a secret manually
+# and put the secret in `.decompose/secret.txt`
+local secret_file=$(_decompose-project-root)/.decompose/secret.txt
+if [ -f $secret_file ]; then
+  PROJECT_PASSENGER_SECRET_KEY_BASE=$(cat $secret_file)
+fi
+
 # vim:syntax=sh

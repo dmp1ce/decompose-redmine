@@ -23,4 +23,7 @@ PROJECT_REDMINE_LANG="en"
 # Basic HTTP security
 #PROJECT_HTTP_SECURITY="on"
 
+# Allow project elements file to override all elements
+source $(_decompose-project-root)/elements
+
 # vim:syntax=sh
