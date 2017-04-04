@@ -33,8 +33,8 @@ _decompose-process-initialize_redmine() {
   # Get mariadb container information
   mariadb_container_id=$(docker-compose ps -q mariadb)
 
-  echo "Allow MySQL to start up (wait 10 seconds)"
-  for i in {1..10}; do printf "$((11-i)) "; sleep 1; done; echo ""
+  echo "Allow MySQL to start up (wait 20 seconds)"
+  for i in {1..20}; do printf "$((21-i)) "; sleep 1; done; echo ""
 
   echo "Creating Redmine user"
   docker exec $mariadb_container_id mysql -u root -p$PROJECT_DB_ROOT_PASSWORD -e 'CREATE USER '"'"$PROJECT_DB_USER"'"'@'"'"'172.%'"'"' IDENTIFIED BY '"'"$PROJECT_DB_PASSWORD"'"''
