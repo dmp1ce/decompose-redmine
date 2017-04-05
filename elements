@@ -26,4 +26,6 @@ PROJECT_REDMINE_LANG="en"
 # Allow project elements file to override all elements
 source $(_decompose-project-root)/elements
 
+PROJECT_DECOMPOSE_REDMINE_ENVIRONMENT_VERSION="1.0.0"
+
 # vim:syntax=sh
